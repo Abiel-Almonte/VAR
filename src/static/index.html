@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image-Text Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #output { white-space: pre-wrap; }
+        img { max-width: 100%; height: auto; margin: 10px 0; }
+        .inline-content { display: inline; }
+    </style>
+</head>
+<body>
+    <h1>Image-Text Generator</h1>
+    <textarea id="input" rows="4" cols="50"></textarea>
+    <br>
+    <button onclick="generate()">Generate</button>
+    <div id="output"></div>
+
+    <script>
+        async function generate() {
+            const input = document.getElementById('input').value;
+            const output = document.getElementById('output');
+            output.innerHTML = '';
+
+            try {
+                const response = await fetch('http://localhost:8000/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: input})
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                let buffer = '';
+                let imageQueue = [];
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const events = chunk.split('\n\n');
+                    
+                    for (const event of events) {
+                        if (event.startsWith('data: ')) {
+                            const data = JSON.parse(event.slice(6));
+                            if (data.type === 'terminator' 
+                                && data.data == '[DONE]') break;
+                            
+                            if (data.type === 'text') {
+                                buffer += data.data;
+                                updateOutput();
+                            } else if (data.type === 'image') {
+                                buffer += '<|IMG|>';
+                                imageQueue.push(data.data);
+                                updateOutput();
+                            }
+                        }
+                    }
+                }
+
+                function updateOutput() {
+                    while (buffer.includes('<|IMG|>') && imageQueue.length > 0) {
+                        const parts = buffer.split('<|IMG|>', 2);
+                        const beforeImage = parts[0];
+                        buffer = parts[1] || '';
+
+                        const textNode = document.createTextNode(beforeImage);
+                        output.appendChild(textNode);
+
+                        const imageData = imageQueue.shift();
+                        const img = document.createElement('img');
+                        img.src = `http://localhost:8000/images/${imageData.image}`;
+                        img.alt = imageData.caption;
+                        img.className = 'inline-content';
+                        output.appendChild(img);
+                    }
+
+                    if (buffer) {
+                        const textNode = document.createTextNode(buffer);
+                        output.appendChild(textNode);
+                        buffer = '';
+                    }
+                }
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
