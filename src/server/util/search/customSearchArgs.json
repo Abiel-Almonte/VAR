@@ -1,0 +1,11 @@
+{
+    "url":"https://www.googleapis.com/customsearch/v1",
+    "params": {
+        "q": null,
+        "key": null,
+        "cx": null,
+        "searchType": "image",
+        "safe": "off",
+        "num": 1
+    }
+}
