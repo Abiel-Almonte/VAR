@@ -1,4 +1,4 @@
 /src/__pycache__
-/src/index.faiss
+/src/data
 /src/temp.ipynb
-/src/customSearchArgs.json
+/src/.env
