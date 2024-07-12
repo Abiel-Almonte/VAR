@@ -1,13 +1,16 @@
 from vllm import AsyncLLMEngine, AsyncEngineArgs, SamplingParams
 from transformers import AutoTokenizer
-from vectordb import CLIPCompositeIndexer
+from util import CLIPCompositeIndexer
 from collections import deque
-from consts import*
 import uuid
-
+from util import( 
+MODEL, DTYPE, MAX_LEN,
+GPU_UTIL, IMG_PROMPT,
+TEMP, MAX_TOKENS,
+IMG_TOKEN)
 
 class vLLM_Engine():
-    def __init__(self, window_size:int= 50):
+    def __init__(self, window_size:int= 100):
 
         engine_args= AsyncEngineArgs(
             MODEL,
