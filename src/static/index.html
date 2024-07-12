@@ -10,6 +10,7 @@
         img { max-width: 100%; height: auto; margin: 10px 0; }
         .inline-content { display: inline; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <h1>Image-Text Generator</h1>
@@ -35,7 +36,6 @@
                 const decoder = new TextDecoder();
 
                 let buffer = '';
-                let imageQueue = [];
 
                 while (true) {
                     const { value, done } = await reader.read();
@@ -47,43 +47,20 @@
                     for (const event of events) {
                         if (event.startsWith('data: ')) {
                             const data = JSON.parse(event.slice(6));
-                            if (data.type === 'terminator' 
-                                && data.data == '[DONE]') break;
+                            if (data.type === 'terminator' && data.data == '[DONE]') break;
                             
                             if (data.type === 'text') {
                                 buffer += data.data;
-                                updateOutput();
                             } else if (data.type === 'image') {
-                                buffer += '<|IMG|>';
-                                imageQueue.push(data.data);
-                                updateOutput();
+                                buffer += `![image](${data.data})`;
                             }
+                            updateOutput();
                         }
                     }
                 }
 
                 function updateOutput() {
-                    while (buffer.includes('<|IMG|>') && imageQueue.length > 0) {
-                        const parts = buffer.split('<|IMG|>', 2);
-                        const beforeImage = parts[0];
-                        buffer = parts[1] || '';
-
-                        const textNode = document.createTextNode(beforeImage);
-                        output.appendChild(textNode);
-
-                        const imageData = imageQueue.shift();
-                        const img = document.createElement('img');
-                        img.src = `http://localhost:8000/images/${imageData.image}`;
-                        img.alt = imageData.caption;
-                        img.className = 'inline-content';
-                        output.appendChild(img);
-                    }
-
-                    if (buffer) {
-                        const textNode = document.createTextNode(buffer);
-                        output.appendChild(textNode);
-                        buffer = '';
-                    }
+                    output.innerHTML = marked.parse(buffer);
                 }
             } catch (error) {
                 output.textContent = 'Error: ' + error.message;
