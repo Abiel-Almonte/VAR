@@ -1,25 +1,26 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from model import vLLM_Engine
-import asyncio
+#from model import vLLM_Engine
+from models import gpt_Engine
 import json
 
 app= FastAPI()
-llm= vLLM_Engine()
+llm= gpt_Engine() 
+#llm= vLLM_Engine()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/images", StaticFiles(directory="/home/abiel/workspace/Flickr30k/flickr30k_images/flickr30k_images"), name="images")
+app.mount("/client", StaticFiles(directory="../client"), name="client")
+#app.mount("/images", StaticFiles(directory="/home/abiel/workspace/Flickr30k/flickr30k_images/flickr30k_images"), name="images")
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class Question(BaseModel):
@@ -28,7 +29,7 @@ class Question(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    with open("static/index.html", "r") as f:
+    with open("client/index.html", "r") as f:
         return f.read()
     
 @app.post("/generate")
@@ -42,9 +43,9 @@ async def generate(question: Question):
 
             text_buffer += token
             if "<|IMG|>" in text_buffer:
-                image = llm.retrieved_images[image_index][0]
+                image_url = llm.retrieved_images[image_index] #must index [0] if using composite indexer
 
-                yield f"data: {json.dumps({'type': 'image', 'data': image})}\n\n"
+                yield f"data: {json.dumps({'type': 'image', 'data': image_url})}\n\n"
                 image_index += 1
                 text_buffer = text_buffer.replace("<|IMG|>", "")
 
