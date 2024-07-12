@@ -4,7 +4,7 @@ import torch, faiss,  pandas, numpy, numpy.typing, os
 import torchvision.transforms as transforms
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
-from consts import(
+from ..model import(
     CLIP_MODEL,
     CLIP_COMP_DIM,
     CSV_FOLDER,
