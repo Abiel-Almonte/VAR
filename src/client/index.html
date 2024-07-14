@@ -3,25 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image-Text Generator</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        #output { white-space: pre-wrap; }
-        img { max-width: 100%; height: auto; margin: 10px 0; }
-        .inline-content { display: inline; }
-    </style>
+    <title>VAR Prototype</title>
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <h1>Image-Text Generator</h1>
-    <textarea id="input" rows="4" cols="50"></textarea>
-    <br>
-    <button onclick="generate()">Generate</button>
+    <h1>VAR Prototype</h1>
     <div id="output"></div>
-
+    <div class="input-container">
+        <div class="custom_input">
+            <input class="input" type="text" id="input" placeholder="Type here ..." onkeydown="handleKeyDown(event)">
+        </div>
+    </div>
+    <br>
     <script>
+
         async function generate() {
             const input = document.getElementById('input').value;
+            await processInput(input);
+        }
+
+        async function handleKeyDown(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('input').value;
+                await processInput(input);
+            }
+        }
+
+        async function processInput(input) {
             const output = document.getElementById('output');
             output.innerHTML = '';
 
@@ -40,15 +49,15 @@
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) break;
-                    
+
                     const chunk = decoder.decode(value);
                     const events = chunk.split('\n\n');
-                    
+
                     for (const event of events) {
                         if (event.startsWith('data: ')) {
                             const data = JSON.parse(event.slice(6));
-                            if (data.type === 'terminator' && data.data == '[DONE]') break;
-                            
+                            if (data.type === 'terminator' && data.data === '[DONE]') break;
+
                             if (data.type === 'text') {
                                 buffer += data.data;
                             } else if (data.type === 'image') {
@@ -61,6 +70,7 @@
 
                 function updateOutput() {
                     output.innerHTML = marked.parse(buffer);
+                    output.scrollTop = output.scrollHeight;
                 }
             } catch (error) {
                 output.textContent = 'Error: ' + error.message;
