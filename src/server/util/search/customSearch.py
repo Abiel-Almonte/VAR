@@ -2,7 +2,7 @@ import requests, json, os
 from dotenv import load_dotenv
 from os.path import join, dirname, abspath
 
-dotenv_path = join(dirname(__file__), '..', '..', '.env')
+dotenv_path = join(dirname(__file__), '..', '..', '..', '.env')
 load_dotenv(dotenv_path)
 
 json_path = join(dirname(abspath(__file__)), 'customSearchArgs.json')
