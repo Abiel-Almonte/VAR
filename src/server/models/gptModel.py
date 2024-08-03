@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from typing import AsyncGenerator
 
 sys.path.insert(0, '../util')
-from util import IMG_PROMPT, get_img_url, functions
+from util import IMG_PROMPT, get_img_url
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
